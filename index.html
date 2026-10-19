@@ -3376,7 +3376,14 @@ void main() {
   });
 
   build();
-  new ResizeObserver(function () { build(); measure(false); }).observe(root);
+  // v61: rebuild only when the roster's width changes, or its height by more than 2px (columns mode depends on height);
+  // sub-pixel height changes come from the headline refit below and must not feed back into a rebuild
+  var bW = -1, bH = -1;
+  new ResizeObserver(function () {
+    var r = root.getBoundingClientRect(), w = Math.round(r.width), h = r.height;
+    if (w === bW && Math.abs(h - bH) <= 2) return;
+    bW = w; bH = h; build(); measure(false);
+  }).observe(root);
 
   // pause, offscreen, tap-outside
   var pauseBtn = root.querySelector(".dtr-pause");
@@ -3399,11 +3406,21 @@ void main() {
     var avail = copy.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), h = root.getBoundingClientRect().height, stripMode = cols === 0;
     var lines = spans.length, maxByHeight = stripMode ? 200 : Math.max(56, (h * 0.52) / Math.max(1, lines + 0.45));
     var size = (avail * (stripMode ? 1 : 1.18)) / (widestAt100 * 1.08) * 100;
-    size = Math.max(40, Math.min(Math.min(280, maxByHeight), Math.floor(size * 10) / 10));
-    root.style.setProperty("--dtr-ts", size + "px");
+    size = Math.max(40, Math.min(Math.min(280, maxByHeight), Math.floor(size)));
+    // v61: on phones the roster's height follows the headline, so a tiny refit changed the height, which refit the
+    // headline again, every frame: the whole page below shook. Whole pixels only, and ignore changes under 1px.
+    if (Math.abs(size - applied) < 1) return;
+    applied = size; root.style.setProperty("--dtr-ts", size + "px");
   }
-  fit(); new ResizeObserver(fit).observe(root);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  var applied = -1, fW = -1, fH = -1;
+  function refit(force) {
+    var r = root.getBoundingClientRect(), w = Math.round(r.width), h = r.height;
+    // the headline depends on width; in columns mode also on height (strip mode: height is the result, not an input)
+    if (!force && w === fW && (cols === 0 || Math.abs(h - fH) <= 2)) return;
+    fW = w; fH = h; fit();
+  }
+  refit(true); new ResizeObserver(function () { refit(false); }).observe(root);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { refit(true); });
 })();
 </script>
 <script>
