@@ -168,6 +168,12 @@ h1 em { font-style: normal; color: var(--accent); }
 /* projects: the banner is the tile; clicking it (or 'อ่านเพิ่มเติม') opens a full-page detail view with the banner's wording */
 .pj-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .pj-next { margin-top: 20px; color: var(--muted); font-size: 15px; }
+.pj-extra { margin-top: 30px; padding-top: 26px; border-top: 1px solid var(--line); }
+.pj-extra-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 24px; margin-bottom: 14px; }
+.pj-extra-head p { color: var(--muted); font-size: 14.5px; }
+.pj-extra-head a { color: var(--accent); font-weight: 600; font-size: 14.5px; text-decoration: none; white-space: nowrap; }
+.pj-extra-head a:hover { text-decoration: underline; }
+.pj-frame { display: block; width: 100%; height: 900px; border: 0; background: #fff; }
 .pj-tile { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; color: inherit; text-decoration: none;
   transition: border-color .2s ease, transform .2s ease; }
 a.pj-tile:hover { border-color: var(--accent); transform: translateY(-2px); }
@@ -582,6 +588,10 @@ footer .logo { --h: 18px; gap: 5px; }
                   <li>จริยธรรมการวิจัยและการใช้ AI อย่างรับผิดชอบ</li>
                 </ul>
               </div>
+            </div>
+            <div class="pj-extra">
+              <div class="pj-extra-head"><div><h4>แอนิเมชันและรายละเอียดหลักสูตร</h4><p>แอนิเมชันอธิบายโครงการ เนื้อหาการเรียน 15 ครั้ง รวม 45 ชั่วโมง และแผน 5 เดือน</p></div><a href="projects/bone-metastasis.html" target="_blank" rel="noopener">เปิดแบบเต็มหน้า ↗</a></div>
+              <iframe class="pj-frame" data-src="projects/bone-metastasis.html?embed=1" title="แอนิเมชันและรายละเอียดหลักสูตร โครงการ Bone Metastasis" allow="fullscreen" allowfullscreen></iframe>
             </div>
             <div class="pj-foot">
               <div>
@@ -1125,12 +1135,18 @@ window.TEAM_INFO = [
     var page = entry.page, big = page.querySelector(".pj-banner img"), small = entry.tile.querySelector("img");
     if (!big.getAttribute("src")) big.src = small.currentSrc || small.src;      // reuse the tile's image, no second copy in the file
     clearTimeout(page._t); page.hidden = false; page.scrollTop = 0;
+    page.querySelectorAll("iframe[data-src]").forEach(function (f) { if (!f.getAttribute("src")) f.src = f.getAttribute("data-src"); });
     requestAnimationFrame(function () { requestAnimationFrame(function () { page.classList.add("is-open"); }); });
   }
   function hide(entry, now) {
     var page = entry.page; page.classList.remove("is-open");
-    clearTimeout(page._t); if (now || reduce) page.hidden = true; else page._t = setTimeout(function () { page.hidden = true; }, 260);
+    function done() { page.hidden = true; page.querySelectorAll("iframe[data-src]").forEach(function (f) { f.removeAttribute("src"); }); }   // stops the 3D film
+    clearTimeout(page._t); if (now || reduce) done(); else page._t = setTimeout(done, 260);
   }
+  window.addEventListener("message", function (ev) {                           // the embedded page reports its height
+    var h = ev.data && ev.data.pjFrameHeight; if (!h) return;
+    document.querySelectorAll("iframe.pj-frame").forEach(function (f) { if (f.contentWindow === ev.source) f.style.height = Math.ceil(h) + "px"; });
+  });
   function open(hash) {
     var entry = byHash[hash]; if (!entry || entry === cur) return;
     if (cur) hide(cur, true); else lastFocus = document.activeElement;
