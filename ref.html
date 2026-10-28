@@ -23,7 +23,6 @@
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --wrap: 1080px; --head: 68px;
   --dot-a: #43C7F0; --dot-b: #1E55B2; --alpha-a: #00C2AE; --alpha-b: #08302C;
-  --t-med: #E3EFEC; --t-eng: #E6EEF5; --t-medeng: #ECEAF5; --t-pharm: #F5ECE4; --t-ai: #F3EFDD; --t-all: #FFFFFF;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -112,9 +111,6 @@ section { scroll-margin-top: var(--head); }
 .divider b { width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg, var(--dot-a), var(--dot-b)); }
 .sec-note { color: var(--muted); font-size: 15.5px; max-width: 40em; margin: 12px auto 0; }
 
-/* portfolio tiles (A–E) — click to filter the programmes */
-.cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
-.cat { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 10; padding: 0 0 26px; border: 1px solid var(--line); border-radius: 10px; background: var(--t-all);
   font: inherit; color: var(--fg); cursor: pointer; transition: border-color .2s ease, transform .2s ease; }
 .cat:hover { border-color: var(--accent); transform: translateY(-2px); }
 .cat-med { background: var(--t-med); } .cat-eng { background: var(--t-eng); } .cat-medeng { background: var(--t-medeng); }
@@ -126,6 +122,15 @@ section { scroll-margin-top: var(--head); }
 .cat.is-on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .cat.is-on .cat-chip { border-color: var(--accent); color: var(--accent); }
 .cats { padding-bottom: 22px; row-gap: 44px; }
+
+/* portfolio filter: one row of chips right above the posters */
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: -6px 0 32px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 40px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+  color: var(--fg); font: 500 15px/1 var(--font-body); white-space: nowrap; cursor: pointer; transition: border-color .2s ease, background-color .2s ease, color .2s ease; }
+.chip .n { color: var(--muted); font-weight: 400; }
+.chip:hover { border-color: var(--accent); }
+.chip.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip.is-on .n { color: rgba(255,255,255,.75); }
 
 /* programmes grouped by start month */
 .month { margin-top: 8px; }
@@ -283,6 +288,7 @@ body.pr-lock { overflow: hidden; }
 
 .pj-tile { all: unset; }   /* the poster cards reuse the detail-page script; they are styled by .prog */
 .prog.pj-tile { display: flex; flex-direction: column; cursor: pointer; }
+.prog.pj-tile[hidden] { display: none; }   /* filtered out (beats the display:flex above) */
 .prog.pj-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
 
 /* how we learn */
@@ -335,8 +341,6 @@ html.pj-lock .line-fab { display: none; }
   .site-head nav { margin: 0 -24px; width: calc(100% + 48px); }
   .nav-links { gap: 22px; overflow-x: auto; scrollbar-width: none; padding: 0 24px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
   .nav-links::-webkit-scrollbar { display: none; }
-  .cats { grid-template-columns: 1fr 1fr; gap: 40px 14px; }
-  .cat-chip { font-size: 13.5px; padding: 8px 10px; white-space: normal; min-width: 86%; }
   .contact-list { grid-template-columns: 1fr; }
   footer .wrap { grid-template-columns: 1fr; }
   .foot-contact { justify-items: start; text-align: left; }
@@ -349,7 +353,9 @@ html.pj-lock .line-fab { display: none; }
   .section { padding-block: 56px; }
   .steps, .works-grid { grid-template-columns: 1fr; }
   .progs { grid-template-columns: minmax(0, 420px); }
-  .cat-count { display: none; }
+  .chips { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; margin-inline: -18px; padding: 2px 18px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+  .chips::-webkit-scrollbar { display: none; }
   .hero-copy { order: -1; }
   .motion { max-width: 300px; width: 100%; justify-self: center; }
   .line-fab span { display: none; } .line-fab { padding: 0 13px; }
@@ -357,7 +363,7 @@ html.pj-lock .line-fab { display: none; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .caret.on { animation: none; }
-  .cat, .prog-img img, .work .cover img, .btn, .nav-links a { transition: none; }
+  .chip, .prog-img img, .work .cover img, .btn, .nav-links a { transition: none; }
 }
 </style>
 </head>
@@ -370,7 +376,6 @@ html.pj-lock .line-fab { display: none; }
     </a>
     <nav aria-label="เมนูหลัก">
       <ul class="nav-links">
-        <li><a href="#tracks"><span class="nav-long">เลือกตามสายพอร์ต</span><span class="nav-short">สายพอร์ต</span></a></li>
         <li><a href="#programs"><span class="nav-long">โครงการที่เปิดรับ</span><span class="nav-short">โครงการ</span></a></li>
         <li><a href="#works"><span class="nav-long">ผลงานนักเรียน</span><span class="nav-short">ผลงาน</span></a></li>
         <li><a href="#how">วิธีการเรียนรู้</a></li>
@@ -412,33 +417,22 @@ html.pj-lock .line-fab { display: none; }
     </div>
   </section>
 
-  <!-- ===== เลือกตามสายพอร์ต (กดเพื่อกรองโครงการ) ===== -->
-  <section class="section" id="tracks" aria-labelledby="h-tracks">
-    <div class="wrap">
-      <div class="sec-head">
-        <h2 id="h-tracks">เลือกตามสายพอร์ต</h2>
-        <span class="divider" aria-hidden="true"><i></i><b></b><i></i></span>
-        <p class="sec-note">เลือกสายที่ตรงกับพอร์ตที่จะยื่น แล้วดูโครงการที่เหมาะด้านล่าง</p>
-      </div>
-      <div class="cats">
-        <button type="button" class="cat cat-med" data-track="med" aria-pressed="false"><span class="cat-letter" aria-hidden="true">A</span><span class="cat-count">2 โครงการ</span><span class="cat-chip">A. พอร์ตแพทย์</span></button>
-        <button type="button" class="cat cat-eng" data-track="eng" aria-pressed="false"><span class="cat-letter" aria-hidden="true">B</span><span class="cat-count">1 โครงการ</span><span class="cat-chip">B. พอร์ตวิศวะ</span></button>
-        <button type="button" class="cat cat-medeng" data-track="medeng" aria-pressed="false"><span class="cat-letter" aria-hidden="true">C</span><span class="cat-count">1 โครงการ</span><span class="cat-chip">C. พอร์ตแพทย์-วิศวะ</span></button>
-        <button type="button" class="cat cat-pharm" data-track="pharm" aria-pressed="false"><span class="cat-letter" aria-hidden="true">D</span><span class="cat-count">1 โครงการ</span><span class="cat-chip">D. พอร์ตเภสัช</span></button>
-        <button type="button" class="cat cat-ai" data-track="ai" aria-pressed="false"><span class="cat-letter" aria-hidden="true">E</span><span class="cat-count">1 โครงการ</span><span class="cat-chip">E. พอร์ต AI-วิทยาการข้อมูล</span></button>
-        <button type="button" class="cat cat-all is-on" data-track="all" aria-pressed="true"><span class="cat-letter" aria-hidden="true">✓</span><span class="cat-count">2 โครงการ</span><span class="cat-chip">ดูทุกโครงการ</span></button>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== โครงการที่เปิดรับ (จัดตามเดือนที่เริ่มเรียน) ===== -->
   <section class="section" id="programs" aria-labelledby="h-programs">
     <div class="wrap">
       <div class="sec-head">
         <h2 id="h-programs">โครงการที่เปิดรับ · เริ่มเรียนเดือนตุลาคม 2569</h2>
         <span class="divider" aria-hidden="true"><i></i><b></b><i></i></span>
-        <p class="sec-note">กดที่โปสเตอร์เพื่ออ่านรายละเอียด แอนิเมชันอธิบายโครงการ และแผนการเรียน 5 เดือน</p>
+        <p class="sec-note">เลือกสายพอร์ตที่จะยื่น แล้วกดที่โปสเตอร์เพื่ออ่านรายละเอียด แอนิเมชัน และแผนการเรียน 5 เดือน</p>
       </div>
+        <div class="chips" role="group" aria-label="กรองโครงการตามสายพอร์ต">
+          <button type="button" class="chip is-on" data-track="all" aria-pressed="true">ทั้งหมด <span class="n">(2)</span></button>
+          <button type="button" class="chip" data-track="med" aria-pressed="false">พอร์ตแพทย์ <span class="n">(2)</span></button>
+          <button type="button" class="chip" data-track="eng" aria-pressed="false">พอร์ตวิศวะ <span class="n">(1)</span></button>
+          <button type="button" class="chip" data-track="medeng" aria-pressed="false">พอร์ตแพทย์-วิศวะ <span class="n">(1)</span></button>
+          <button type="button" class="chip" data-track="pharm" aria-pressed="false">พอร์ตเภสัช <span class="n">(1)</span></button>
+          <button type="button" class="chip" data-track="ai" aria-pressed="false">พอร์ต AI-วิทยาการข้อมูล <span class="n">(1)</span></button>
+        </div>
       <div class="month">
         <div class="progs">
         <a class="pj-tile prog" href="#stroke-care" aria-haspopup="dialog" aria-controls="pjPage1" data-tracks="med eng medeng">
@@ -987,17 +981,17 @@ html.pj-lock .line-fab { display: none; }
 })();
 </script>
 <script>
-/* Portfolio tiles filter the programme posters; "ดูทุกโครงการ" shows them all again. */
+/* Portfolio chips filter the programme posters right below them; "ทั้งหมด" shows them all again. */
 (function () {
-  var cats = Array.prototype.slice.call(document.querySelectorAll(".cat")), progs = Array.prototype.slice.call(document.querySelectorAll(".prog"));
-  var empty = document.getElementById("progEmpty"), list = document.getElementById("programs");
+  var chips = Array.prototype.slice.call(document.querySelectorAll(".chip")), progs = Array.prototype.slice.call(document.querySelectorAll(".prog"));
+  var empty = document.getElementById("progEmpty");
   function apply(track) {
     var shown = 0;
     progs.forEach(function (p) { var on = track === "all" || (" " + p.getAttribute("data-tracks") + " ").indexOf(" " + track + " ") >= 0; p.hidden = !on; if (on) shown++; });
-    cats.forEach(function (c) { var on = c.getAttribute("data-track") === track; c.classList.toggle("is-on", on); c.setAttribute("aria-pressed", on ? "true" : "false"); });
+    chips.forEach(function (c) { var on = c.getAttribute("data-track") === track; c.classList.toggle("is-on", on); c.setAttribute("aria-pressed", on ? "true" : "false"); });
     empty.hidden = shown > 0;
   }
-  cats.forEach(function (c) { c.addEventListener("click", function () { apply(c.getAttribute("data-track")); list.scrollIntoView({ behavior: "smooth", block: "start" }); }); });
+  chips.forEach(function (c) { c.addEventListener("click", function () { apply(c.getAttribute("data-track")); }); });
 })();
 </script>
 <script>
